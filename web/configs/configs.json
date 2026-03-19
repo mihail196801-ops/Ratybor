@@ -1,0 +1,26 @@
+[
+  {
+    "country": "🇩🇪",
+    "name": "Germany #1",
+    "config": "vless://uuid@de1.example.com:443?type=ws&security=tls&path=/path...",
+    "priority": 1,
+    "protocol": "vless",
+    "ping_ms": 45
+  },
+  {
+    "country": "🇫🇮",
+    "name": "Finland #2", 
+    "config": "vless://uuid@fi2.example.com:443?security=reality&pbk=...",
+    "priority": 2,
+    "protocol": "vless",
+    "ping_ms": 62
+  },
+  {
+    "country": "🇯🇵",
+    "name": "Japan #3",
+    "config": "ss://YWVzLTI1Ni1nY206cGFzcw@jp3.example.com:8388",
+    "priority": 3,
+    "protocol": "shadowsocks",
+    "ping_ms": 120
+  }
+]
