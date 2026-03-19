@@ -33,7 +33,6 @@
         .logo { font-size: 3rem; margin-bottom: 10px; }
         h1 { font-size: 1.5rem; font-weight: 700; }
 
-        /* Карточка ключа */
         .key-card {
             background: rgba(255,255,255,0.15);
             backdrop-filter: blur(10px);
@@ -85,7 +84,6 @@
             background: rgba(255, 107, 107, 0.2);
         }
 
-        /* Кнопка скачивания */
         .download-card {
             background: rgba(255,255,255,0.15);
             backdrop-filter: blur(10px);
@@ -120,7 +118,6 @@
             transform: none;
         }
 
-        /* Кнопка подключения */
         .connect-wrapper {
             display: flex;
             justify-content: center;
@@ -184,7 +181,6 @@
             white-space: nowrap;
         }
 
-        /* Статус активации */
         .activation-status {
             background: rgba(255,255,255,0.1);
             border-radius: 12px;
@@ -198,7 +194,6 @@
         .activation-status.success { border: 2px solid #00d084; }
         .activation-status.error { border: 2px solid #ff6b6b; }
 
-        /* Серверы */
         .servers-title {
             font-size: 1.1rem;
             font-weight: 600;
@@ -240,7 +235,6 @@
 
         .select-btn.selected { background: #00d084; }
 
-        /* Статистика */
         .stats {
             display: none;
             grid-template-columns: 1fr 1fr;
@@ -258,7 +252,6 @@
         .stat-value { font-size: 1.3rem; font-weight: 700; }
         .stat-label { font-size: 0.8rem; opacity: 0.8; }
 
-        /* Toast */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -279,7 +272,6 @@
         .toast.error { background: #ff6b6b; color: #fff; }
         .toast.success { background: #00d084; color: #fff; }
 
-        /* Мобильная версия */
         @media (max-width: 480px) {
             body { padding: 15px; }
             .connect-btn { width: 140px; height: 140px; font-size: 2.5rem; }
@@ -299,7 +291,6 @@
             <h1>Ratybor VPN</h1>
         </div>
 
-        <!-- Ввод ключа -->
         <div class="key-card">
             <div class="key-title">🔑 Введите ваш ключ доступа</div>
             <input 
@@ -315,7 +306,6 @@
             </div>
         </div>
 
-        <!-- Скачивание расширения -->
         <div class="download-card">
             <div class="key-title">📦 Шаг 1: Скачайте расширение</div>
             <button class="download-btn" id="downloadBtn" onclick="downloadExtension()">
@@ -326,7 +316,6 @@
             </p>
         </div>
 
-        <!-- Кнопка подключения -->
         <div class="connect-wrapper">
             <button class="connect-btn" id="connectBtn" disabled>
                 🔌
@@ -334,7 +323,6 @@
             </button>
         </div>
 
-        <!-- Статистика -->
         <div class="stats" id="stats">
             <div class="stat-box">
                 <div class="stat-value" id="downloadSpeed">0</div>
@@ -346,7 +334,6 @@
             </div>
         </div>
 
-        <!-- Серверы -->
         <div class="servers-title">🌍 Выберите сервер</div>
         <div id="serversList"></div>
     </div>
@@ -357,6 +344,9 @@
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+
+        // API URL (измените на адрес вашего сервера)
+        const API_URL = 'http://localhost:8080';
 
         let isConnected = false;
         let isActivated = false;
@@ -380,7 +370,17 @@
         const stats = document.getElementById('stats');
         const toast = document.getElementById('toast');
 
-        // Проверка ключа
+        // Проверка сохраненного ключа
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedKey = localStorage.getItem('ratybor_key');
+            const isActivated = localStorage.getItem('ratybor_activated');
+            
+            if (savedKey && isActivated === 'true') {
+                accessKeyInput.value = savedKey;
+                activateUI();
+            }
+        });
+
         accessKeyInput.addEventListener('input', (e) => {
             accessKey = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
             e.target.value = accessKey;
@@ -393,16 +393,58 @@
         });
 
         async function validateKey(key) {
-            // Здесь должна быть проверка ключа на сервере
-            // Для демо принимаем любой 8-символьный ключ
-            activationStatus.className = 'activation-status show success';
-            activationMessage.textContent = '✅ Ключ активирован!';
-            isActivated = true;
-            connectBtn.disabled = false;
-            connectLabel.textContent = 'Нажмите для подключения';
-            showToast('🔑 Ключ принят!', 'success');
+            activationStatus.className = 'activation-status show';
+            activationMessage.textContent = '⏳ Проверка ключа...';
             
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            try {
+                const validateResponse = await fetch(`${API_URL}/api/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: key })
+                });
+                
+                const validateData = await validateResponse.json();
+                
+                if (!validateData.success) {
+                    throw new Error(validateData.error || 'Ключ недействителен');
+                }
+                
+                const deviceId = 'device_' + (tg.initDataUnsafe?.user?.id || Date.now());
+                
+                const activateResponse = await fetch(`${API_URL}/api/activate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: key, device_id: deviceId })
+                });
+                
+                const activateData = await activateResponse.json();
+                
+                if (!activateData.success) {
+                    throw new Error(activateData.error || 'Не удалось активировать ключ');
+                }
+                
+                activationStatus.className = 'activation-status show success';
+                activationMessage.textContent = '✅ Ключ активирован!';
+                isActivated = true;
+                connectBtn.disabled = false;
+                connectLabel.textContent = 'Нажмите для подключения';
+                showToast('🔑 Ключ принят и активирован!', 'success');
+                
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                
+                localStorage.setItem('ratybor_key', key);
+                localStorage.setItem('ratybor_activated', 'true');
+                
+            } catch (error) {
+                console.error('Validation error:', error);
+                activationStatus.className = 'activation-status show error';
+                activationMessage.textContent = '❌ ' + error.message;
+                isActivated = false;
+                connectBtn.disabled = true;
+                showToast('❌ Ошибка: ' + error.message, 'error');
+                
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+            }
         }
 
         function resetActivation() {
@@ -412,9 +454,17 @@
             connectLabel.textContent = 'Введите ключ';
         }
 
+        function activateUI() {
+            isActivated = true;
+            connectBtn.disabled = false;
+            connectLabel.textContent = 'Нажмите для подключения';
+            activationStatus.className = 'activation-status show success';
+            activationMessage.textContent = '✅ Ключ активирован!';
+        }
+
         function downloadExtension() {
             if (!isActivated) {
-                showToast('❌ Сначала введите ключ доступа', 'error');
+                showToast('❌ Сначала введите и активируйте ключ', 'error');
                 return;
             }
 
@@ -454,7 +504,7 @@
 
         async function toggleConnection() {
             if (!isActivated) {
-                showToast('❌ Введите ключ доступа', 'error');
+                showToast('❌ Введите и активируйте ключ', 'error');
                 return;
             }
             if (!selectedConfig) {
@@ -521,15 +571,8 @@
             setTimeout(() => { toast.className = 'toast'; }, 3000);
         }
 
-        // Инициализация
         connectBtn.addEventListener('click', toggleConnection);
         renderServers();
-
-        // Автозаполнение ключа из Telegram (если есть)
-        if (tg.initDataUnsafe?.user?.id) {
-            // Можно использовать ID пользователя как часть ключа
-            console.log('User ID:', tg.initDataUnsafe.user.id);
-        }
     </script>
 </body>
 </html>
