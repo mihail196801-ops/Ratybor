@@ -28,6 +28,7 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
         }
 
         .logo { font-size: 3rem; margin-bottom: 10px; }
@@ -40,6 +41,7 @@
             padding: 20px;
             margin-bottom: 20px;
             border: 2px solid rgba(255,255,255,0.2);
+            animation: fadeIn 0.6s ease;
         }
 
         .key-title {
@@ -74,16 +76,6 @@
             border-color: #00d084;
         }
 
-        .key-input.valid {
-            border-color: #00d084;
-            background: rgba(0, 208, 132, 0.2);
-        }
-
-        .key-input.invalid {
-            border-color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.2);
-        }
-
         .download-card {
             background: rgba(255,255,255,0.15);
             backdrop-filter: blur(10px);
@@ -91,6 +83,7 @@
             padding: 20px;
             margin-bottom: 20px;
             text-align: center;
+            animation: fadeIn 0.7s ease;
         }
 
         .download-btn {
@@ -112,16 +105,12 @@
 
         .download-btn:hover { transform: translateY(-2px); }
         .download-btn:active { transform: translateY(0); }
-        .download-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
 
         .connect-wrapper {
             display: flex;
             justify-content: center;
             margin: 30px 0;
+            animation: fadeIn 0.8s ease;
         }
 
         .connect-btn {
@@ -198,6 +187,7 @@
             font-size: 1.1rem;
             font-weight: 600;
             margin: 25px 0 15px;
+            animation: fadeIn 0.9s ease;
         }
 
         .server-item {
@@ -210,6 +200,7 @@
             align-items: center;
             cursor: pointer;
             transition: background 0.2s;
+            animation: fadeIn 1s ease;
         }
 
         .server-item:hover { background: rgba(255,255,255,0.15); }
@@ -272,11 +263,142 @@
         .toast.error { background: #ff6b6b; color: #fff; }
         .toast.success { background: #00d084; color: #fff; }
 
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+
+        .modal {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #fff;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-icon { font-size: 3rem; margin-bottom: 10px; }
+        .modal-title { font-size: 1.5rem; font-weight: 700; }
+
+        .instruction-step {
+            background: rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #00d084;
+        }
+
+        .step-number {
+            background: #00d084;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .step-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .step-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .step-content li {
+            margin: 5px 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .modal-btn:hover { transform: translateY(-2px); }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #00d084 0%, #00a86b 100%);
+            color: #fff;
+        }
+
+        .modal-btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .redirect-info {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .redirect-countdown {
+            font-weight: bold;
+            color: #00d084;
+            font-size: 1.1rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 480px) {
             body { padding: 15px; }
             .connect-btn { width: 140px; height: 140px; font-size: 2.5rem; }
             .connect-label { font-size: 0.9rem; bottom: -25px; }
             .key-input { font-size: 1rem; padding: 12px; }
+            .modal { padding: 20px; }
         }
 
         @media (max-width: 360px) {
@@ -307,9 +429,9 @@
         </div>
 
         <div class="download-card">
-            <div class="key-title">📦 Шаг 1: Скачайте расширение</div>
-            <button class="download-btn" id="downloadBtn" onclick="downloadExtension()">
-                <span>⬇️</span> Скачать расширение
+            <div class="key-title">📦 Скачать расширение</div>
+            <button class="download-btn" onclick="showDownloadInstructions()">
+                <span>⬇️</span> Инструкция по установке
             </button>
             <p style="margin-top: 10px; font-size: 0.85rem; opacity: 0.8;">
                 Для Chrome, Edge, Яндекс.Браузер
@@ -338,6 +460,74 @@
         <div id="serversList"></div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal-overlay" id="downloadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">📦</div>
+                <div class="modal-title">Установка расширения</div>
+            </div>
+
+            <div class="instruction-step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Скачайте все файлы
+                </div>
+                <div class="step-content">
+                    Все необходимые файлы находятся в архиве. Скачайте его по кнопке ниже.
+                </div>
+            </div>
+
+            <div class="instruction-step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Распакуйте архив
+                </div>
+                <div class="step-content">
+                    Создайте новую папку и поместите туда все файлы из архива.
+                </div>
+            </div>
+
+            <div class="instruction-step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Откройте Chrome
+                </div>
+                <div class="step-content">
+                    <ul>
+                        <li>Перейдите: <code>chrome://extensions/</code></li>
+                        <li>Включите <b>"Режим разработчика"</b> (справа сверху)</li>
+                        <li>Нажмите <b>"Загрузить распакованное"</b></li>
+                        <li>Выберите папку с файлами</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="instruction-step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    Готово!
+                </div>
+                <div class="step-content">
+                    Расширение установлено! Вернитесь в Telegram для активации.
+                </div>
+            </div>
+
+            <div class="redirect-info">
+                🔗 Перенаправление на Яндекс.Диск через <span class="redirect-countdown" id="countdown">5</span> сек...
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal()">
+                    Закрыть
+                </button>
+                <button class="modal-btn modal-btn-primary" onclick="downloadNow()">
+                    ⬇️ Скачать сейчас
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -345,32 +535,32 @@
         tg.ready();
         tg.expand();
 
-        // API URL (измените на адрес вашего сервера)
-        const API_URL = '10.191.116.164';
+        const API_URL = 'http://localhost:8080';
 
         let isConnected = false;
         let isActivated = false;
         let accessKey = '';
         let selectedConfig = null;
         let speedInterval = null;
+        let countdownInterval = null;
 
         const configs = [
-            { id: 1, country: 'Нидерланды', location: 'Амстердам', flag: '🇳🇱', ping: 45, config: 'vless://uuid@nl.example.com:443#NL' },
-            { id: 2, country: 'Финляндия', location: 'Хельсинки', flag: '🇫🇮', ping: 62, config: 'vless://uuid@fi.example.com:443#FI' },
-            { id: 3, country: 'Германия', location: 'Франкфурт', flag: '🇩🇪', ping: 38, config: 'vless://uuid@de.example.com:443#DE' }
+            { id: 1, country: 'Нидерланды', location: 'Амстердам', flag: '🇳🇱', ping: 45 },
+            { id: 2, country: 'Финляндия', location: 'Хельсинки', flag: '🇫🇮', ping: 62 },
+            { id: 3, country: 'Германия', location: 'Франкфурт', flag: '🇩🇪', ping: 38 }
         ];
 
         const accessKeyInput = document.getElementById('accessKey');
         const activationStatus = document.getElementById('activationStatus');
         const activationMessage = document.getElementById('activationMessage');
-        const downloadBtn = document.getElementById('downloadBtn');
         const connectBtn = document.getElementById('connectBtn');
         const connectLabel = document.getElementById('connectLabel');
         const serversList = document.getElementById('serversList');
         const stats = document.getElementById('stats');
         const toast = document.getElementById('toast');
+        const downloadModal = document.getElementById('downloadModal');
+        const countdownEl = document.getElementById('countdown');
 
-        // Проверка сохраненного ключа
         window.addEventListener('DOMContentLoaded', () => {
             const savedKey = localStorage.getItem('ratybor_key');
             const isActivated = localStorage.getItem('ratybor_activated');
@@ -379,6 +569,7 @@
                 accessKeyInput.value = savedKey;
                 activateUI();
             }
+            renderServers();
         });
 
         accessKeyInput.addEventListener('input', (e) => {
@@ -394,13 +585,14 @@
 
         async function validateKey(key) {
             activationStatus.className = 'activation-status show';
-            activationMessage.textContent = '⏳ Проверка ключа...';
+            activationMessage.textContent = '⏳ Проверка...';
             
             try {
                 const validateResponse = await fetch(`${API_URL}/api/validate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: key })
+                    body: JSON.stringify({ key: key }),
+                    timeout: 5000
                 });
                 
                 const validateData = await validateResponse.json();
@@ -414,13 +606,14 @@
                 const activateResponse = await fetch(`${API_URL}/api/activate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: key, device_id: deviceId })
+                    body: JSON.stringify({ key: key, device_id: deviceId }),
+                    timeout: 5000
                 });
                 
                 const activateData = await activateResponse.json();
                 
                 if (!activateData.success) {
-                    throw new Error(activateData.error || 'Не удалось активировать ключ');
+                    throw new Error(activateData.error || 'Не удалось активировать');
                 }
                 
                 activationStatus.className = 'activation-status show success';
@@ -428,7 +621,7 @@
                 isActivated = true;
                 connectBtn.disabled = false;
                 connectLabel.textContent = 'Нажмите для подключения';
-                showToast('🔑 Ключ принят и активирован!', 'success');
+                showToast('🔑 Ключ активирован!', 'success');
                 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 
@@ -441,7 +634,7 @@
                 activationMessage.textContent = '❌ ' + error.message;
                 isActivated = false;
                 connectBtn.disabled = true;
-                showToast('❌ Ошибка: ' + error.message, 'error');
+                showToast('❌ ' + error.message, 'error');
                 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             }
@@ -462,21 +655,42 @@
             activationMessage.textContent = '✅ Ключ активирован!';
         }
 
-        function downloadExtension() {
-            if (!isActivated) {
-                showToast('❌ Сначала введите и активируйте ключ', 'error');
-                return;
-            }
+        function showDownloadInstructions() {
+            downloadModal.classList.add('show');
+            startCountdown();
+        }
 
-            const downloadUrl = 'https://github.com/mihail196801-ops/Ratybor/raw/main/downloads/extension.zip';
+        function closeModal() {
+            downloadModal.classList.remove('show');
+            stopCountdown();
+        }
+
+        function downloadNow() {
+            stopCountdown();
+            window.open('https://disk.yandex.ru/d/a-UcZrmlY6v2og', '_blank');
+            closeModal();
+            showToast('⬇️ Открываю Яндекс.Диск...', 'success');
+        }
+
+        function startCountdown() {
+            let seconds = 5;
+            countdownEl.textContent = seconds;
             
-            if (tg.WebApp) {
-                tg.WebApp.openLink(downloadUrl);
-            } else {
-                window.open(downloadUrl, '_blank');
+            countdownInterval = setInterval(() => {
+                seconds--;
+                countdownEl.textContent = seconds;
+                
+                if (seconds <= 0) {
+                    downloadNow();
+                }
+            }, 1000);
+        }
+
+        function stopCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
             }
-            
-            showToast('⬇️ Загрузка началась...', 'success');
         }
 
         function renderServers() {
@@ -572,7 +786,13 @@
         }
 
         connectBtn.addEventListener('click', toggleConnection);
-        renderServers();
+
+        // Close modal on overlay click
+        downloadModal.addEventListener('click', (e) => {
+            if (e.target === downloadModal) {
+                closeModal();
+            }
+        });
     </script>
 </body>
 </html>
