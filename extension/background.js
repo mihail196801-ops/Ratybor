@@ -1,24 +1,33 @@
-// === Глобальное состояние ===
+// Глобальное состояние
 let proxyConfig = null;
 let isConnected = false;
-let activeTabId = null;
+let currentTabId = null;
 
-// === Обработка сообщений от Web App / Content Script ===
+// Обработка сообщений
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('📨 Message received:', request);
+  console.log('📨 Message:', request.action);
 
   switch (request.action) {
+    case 'GET_STATUS':
+      sendResponse({ 
+        connected: isConnected, 
+        config: proxyConfig 
+      });
+      break;
+
     case 'SETUP_PROXY':
       setupProxy(request.config).then(() => {
-        sendResponse({ success: true, message: 'Прокси настроен' });
+        sendResponse({ success: true });
+        broadcastStatus();
       }).catch(err => {
         sendResponse({ success: false, error: err.message });
       });
-      return true; // async response
+      return true;
 
     case 'ENABLE_PROXY':
       enableProxy().then(() => {
-        sendResponse({ success: true, status: 'connected' });
+        sendResponse({ success: true });
+        broadcastStatus();
       }).catch(err => {
         sendResponse({ success: false, error: err.message });
       });
@@ -26,16 +35,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     case 'DISABLE_PROXY':
       disableProxy().then(() => {
-        sendResponse({ success: true, status: 'disconnected' });
+        sendResponse({ success: true });
+        broadcastStatus();
       }).catch(err => {
         sendResponse({ success: false, error: err.message });
-      });
-      return true;
-
-    case 'GET_STATUS':
-      sendResponse({ 
-        connected: isConnected, 
-        config: proxyConfig ? { country: proxyConfig.country } : null 
       });
       return true;
 
@@ -46,71 +49,67 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       } catch (e) {
         sendResponse({ success: false, error: e.message });
       }
-      return true;
+      break;
 
     default:
       sendResponse({ error: 'Unknown action' });
   }
 });
 
-// === Парсинг VLESS конфига ===
+// Парсинг VLESS конфига
 function parseVlessConfig(configString) {
   if (!configString.startsWith('vless://')) {
-    throw new Error('Неподдерживаемый протокол');
+    throw new Error('Неподдерживаемый протокол. Используйте vless://');
   }
 
-  const url = new URL(configString.replace('vless://', 'vless://'));
-  const uuid = url.username;
-  const [host, port] = url.host.split(':');
-  const params = new URLSearchParams(url.search);
+  try {
+    const url = new URL(configString.replace('vless://', 'vless://'));
+    const uuid = url.username;
+    const [host, port] = url.host.split(':');
+    const params = new URLSearchParams(url.search);
 
-  return {
-    protocol: 'vless',
-    uuid,
-    host,
-    port: parseInt(port),
-    security: params.get('security') || 'none',
-    type: params.get('type') || 'tcp',
-    sni: params.get('sni') || host,
-    path: params.get('path') || '/',
-    flow: params.get('flow'),
-    pbk: params.get('pbk'),
-    sid: params.get('sid'),
-    fp: params.get('fp') || 'chrome',
-    alpn: params.get('alpn'),
-    country: decodeURIComponent(url.hash.replace('#', '')) || 'Unknown'
-  };
+    return {
+      protocol: 'vless',
+      uuid: uuid,
+      host: host,
+      port: parseInt(port) || 443,
+      security: params.get('security') || 'none',
+      type: params.get('type') || 'tcp',
+      sni: params.get('sni') || host,
+      path: params.get('path') || '/',
+      flow: params.get('flow'),
+      pbk: params.get('pbk'),
+      sid: params.get('sid'),
+      fp: params.get('fp') || 'chrome',
+      alpn: params.get('alpn'),
+      name: decodeURIComponent(url.hash.replace('#', '')) || 'VPN Server'
+    };
+  } catch (e) {
+    throw new Error('Ошибка парсинга конфига: ' + e.message);
+  }
 }
 
-// === Настройка прокси ===
+// Настройка прокси
 async function setupProxy(config) {
   proxyConfig = config;
   
-  // Сохраняем в storage для восстановления после перезагрузки
   await chrome.storage.local.set({ 
     proxyConfig: config,
     lastUpdated: Date.now()
   });
 
-  // Для VLESS через WebSocket используем proxyRules
-  // Примечание: полноценная поддержка VLESS требует native host
-  // Здесь мы настраиваем SOCKS5/HTTP прокси как заглушку
-  // Для реального VLESS нужно использовать native messaging с внешним приложением
-  
-  console.log('🔧 Proxy config saved:', config);
-  return { success: true };
+  console.log('✅ Proxy configured:', config.host);
+  return true;
 }
 
-// === Включение прокси ===
+// Включение прокси
 async function enableProxy() {
   if (!proxyConfig) {
     throw new Error('Сначала настройте конфиг');
   }
 
-  // Настройка правил прокси
-  // Для демо используем заглушку - в реальности здесь должен быть 
-  // вызов native application или socks5 proxy
-  
+  // Для VLESS через прокси используем HTTPS прокси
+  // Примечание: полноценная поддержка VLESS требует native host
   const proxyRules = {
     mode: "fixed_servers",
     rules: {
@@ -119,7 +118,7 @@ async function enableProxy() {
         host: proxyConfig.host,
         port: proxyConfig.port
       },
-      bypassList: ["localhost", "127.0.0.1", "*.local"]
+      bypassList: ["localhost", "127.0.0.1", "*.local", "<local>"]
     }
   };
 
@@ -130,61 +129,66 @@ async function enableProxy() {
 
   isConnected = true;
   
-  // Обновляем иконку
-  await updateIcon('connected');
-  
   // Уведомление
   chrome.notifications.create({
     type: 'basic',
     iconUrl: 'icons/icon48.png',
-    title: '🔐 VPN Connect',
-    message: `Подключено: ${proxyConfig.country}`
+    title: '🔐 Ratybor VPN',
+    message: `Подключено: ${proxyConfig.name || proxyConfig.host}`,
+    priority: 2
   });
 
   console.log('✅ Proxy enabled');
-  return { success: true };
+  return true;
 }
 
-// === Отключение прокси ===
+// Отключение прокси
 async function disableProxy() {
   await chrome.proxy.settings.clear({ scope: 'regular' });
   isConnected = false;
-  proxyConfig = null;
-  
-  await updateIcon('disconnected');
   
   chrome.notifications.create({
     type: 'basic',
     iconUrl: 'icons/icon48.png',
-    title: '🔌 VPN Connect',
-    message: 'Отключено'
+    title: '🔌 Ratybor VPN',
+    message: 'Отключено',
+    priority: 2
   });
 
   console.log('❌ Proxy disabled');
-  return { success: true };
+  return true;
 }
 
-// === Обновление иконки ===
-async function updateIcon(status) {
-  const path = status === 'connected' 
-    ? { "16": "icons/icon16-active.png", "48": "icons/icon48-active.png", "128": "icons/icon128-active.png" }
-    : { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" };
-  
-  await chrome.action.setIcon({ path });
+// Отправка статуса всем вкладкам
+function broadcastStatus() {
+  chrome.runtime.sendMessage({
+    action: 'STATUS_CHANGED',
+    payload: {
+      connected: isConnected,
+      config: proxyConfig
+    }
+  }).catch(() => {
+    // Игнорируем ошибки (если нет получателей)
+  });
 }
 
-// === Восстановление состояния при загрузке ===
+// Восстановление состояния
 chrome.runtime.onStartup.addListener(async () => {
   const { proxyConfig: savedConfig } = await chrome.storage.local.get('proxyConfig');
   if (savedConfig) {
     proxyConfig = savedConfig;
-    console.log('🔄 Config restored from storage');
+    console.log('🔄 Config restored');
   }
 });
 
-// === Обработка установки ===
+// При установке
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
-    chrome.tabs.create({ url: 'https://ваш-юзернейм.github.io/ваш-репо' });
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon48.png',
+      title: '🔐 Ratybor VPN',
+      message: 'Расширение установлено! Откройте Telegram бота для начала работы.'
+    });
   }
 });
