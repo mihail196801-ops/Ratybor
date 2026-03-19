@@ -1,134 +1,194 @@
-// Инъекция API для Web App
-function injectVPNAPI() {
-  const api = {
-    isExtensionInstalled: () => true,
-    
-    getStatus: () => {
-      return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({ action: 'GET_STATUS' }, (response) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve(response);
-          }
-        });
+// Глобальное состояние
+let proxyConfig = null;
+let isConnected = false;
+let currentTabId = null;
+
+// Обработка сообщений
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('📨 Message:', request.action);
+
+  switch (request.action) {
+    case 'GET_STATUS':
+      sendResponse({ 
+        connected: isConnected, 
+        config: proxyConfig 
       });
-    },
-    
-    parseConfig: (configString) => {
-      return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage(
-          { action: 'PARSE_CONFIG', configString: configString },
-          (response) => {
-            if (response?.success) {
-              resolve(response.config);
-            } else {
-              reject(new Error(response?.error || 'Parse failed'));
-            }
-          }
-        );
+      break;
+
+    case 'SETUP_PROXY':
+      setupProxy(request.config).then(() => {
+        sendResponse({ success: true });
+        broadcastStatus();
+      }).catch(err => {
+        sendResponse({ success: false, error: err.message });
       });
-    },
-    
-    setupProxy: (config) => {
-      return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage(
-          { action: 'SETUP_PROXY', config: config },
-          (response) => {
-            if (response?.success) {
-              resolve(response);
-            } else {
-              reject(new Error(response?.error || 'Setup failed'));
-            }
-          }
-        );
+      return true;
+
+    case 'ENABLE_PROXY':
+      enableProxy().then(() => {
+        sendResponse({ success: true });
+        broadcastStatus();
+      }).catch(err => {
+        sendResponse({ success: false, error: err.message });
       });
-    },
-    
-    enableProxy: () => {
-      return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({ action: 'ENABLE_PROXY' }, (response) => {
-          if (response?.success) {
-            resolve(response);
-          } else {
-            reject(new Error(response?.error || 'Enable failed'));
-          }
-        });
+      return true;
+
+    case 'DISABLE_PROXY':
+      disableProxy().then(() => {
+        sendResponse({ success: true });
+        broadcastStatus();
+      }).catch(err => {
+        sendResponse({ success: false, error: err.message });
       });
-    },
-    
-    disableProxy: () => {
-      return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({ action: 'DISABLE_PROXY' }, (response) => {
-          if (response?.success) {
-            resolve(response);
-          } else {
-            reject(new Error(response?.error || 'Disable failed'));
-          }
-        });
-      });
-    }
-  };
+      return true;
 
-  window.VPNExtension = api;
-  console.log('🔐 VPN Extension API injected');
-}
+    case 'PARSE_CONFIG':
+      try {
+        const parsed = parseVlessConfig(request.configString);
+        sendResponse({ success: true, config: parsed });
+      } catch (e) {
+        sendResponse({ success: false, error: e.message });
+      }
+      break;
 
-// Слушаем сообщения от Web App
-window.addEventListener('message', async (event) => {
-  // Проверяем источник
-  if (!event.origin.includes('t.me') && !event.origin.includes('github.io')) {
-    return;
-  }
-
-  const { action, payload } = event.data || {};
-  if (!action) return;
-
-  console.log('📨 From WebApp:', action);
-
-  try {
-    let response;
-    
-    switch (action) {
-      case 'GET_STATUS':
-        response = await window.VPNExtension.getStatus();
-        break;
-      case 'PARSE_CONFIG':
-        response = await window.VPNExtension.parseConfig(payload.configString);
-        break;
-      case 'SETUP_PROXY':
-        response = await window.VPNExtension.setupProxy(payload.config);
-        break;
-      case 'ENABLE_PROXY':
-        response = await window.VPNExtension.enableProxy();
-        break;
-      case 'DISABLE_PROXY':
-        response = await window.VPNExtension.disableProxy();
-        break;
-      default:
-        console.warn('Unknown action:', action);
-        return;
-    }
-
-    // Отправляем ответ
-    window.postMessage({
-      action: `${action}_RESPONSE`,
-      payload: { success: true, ...response },
-      timestamp: Date.now()
-    }, event.origin);
-
-  } catch (error) {
-    window.postMessage({
-      action: `${action}_RESPONSE`,
-      payload: { success: false, error: error.message },
-      timestamp: Date.now()
-    }, event.origin);
+    default:
+      sendResponse({ error: 'Unknown action' });
   }
 });
 
-// Запускаем инъекцию
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', injectVPNAPI);
-} else {
-  injectVPNAPI();
+// Парсинг VLESS конфига
+function parseVlessConfig(configString) {
+  if (!configString.startsWith('vless://')) {
+    throw new Error('Неподдерживаемый протокол. Используйте vless://');
+  }
+
+  try {
+    const url = new URL(configString.replace('vless://', 'vless://'));
+    const uuid = url.username;
+    const [host, port] = url.host.split(':');
+    const params = new URLSearchParams(url.search);
+
+    return {
+      protocol: 'vless',
+      uuid: uuid,
+      host: host,
+      port: parseInt(port) || 443,
+      security: params.get('security') || 'none',
+      type: params.get('type') || 'tcp',
+      sni: params.get('sni') || host,
+      path: params.get('path') || '/',
+      flow: params.get('flow'),
+      pbk: params.get('pbk'),
+      sid: params.get('sid'),
+      fp: params.get('fp') || 'chrome',
+      alpn: params.get('alpn'),
+      name: decodeURIComponent(url.hash.replace('#', '')) || 'VPN Server'
+    };
+  } catch (e) {
+    throw new Error('Ошибка парсинга конфига: ' + e.message);
+  }
 }
+
+// Настройка прокси
+async function setupProxy(config) {
+  proxyConfig = config;
+  
+  await chrome.storage.local.set({ 
+    proxyConfig: config,
+    lastUpdated: Date.now()
+  });
+
+  console.log('✅ Proxy configured:', config.host);
+  return true;
+}
+
+// Включение прокси
+async function enableProxy() {
+  if (!proxyConfig) {
+    throw new Error('Сначала настройте конфиг');
+  }
+
+  // Для VLESS через прокси используем HTTPS прокси
+  // Примечание: полноценная поддержка VLESS требует native host
+  const proxyRules = {
+    mode: "fixed_servers",
+    rules: {
+      singleProxy: {
+        scheme: "https",
+        host: proxyConfig.host,
+        port: proxyConfig.port
+      },
+      bypassList: ["localhost", "127.0.0.1", "*.local", "<local>"]
+    }
+  };
+
+  await chrome.proxy.settings.set({
+    value: proxyRules,
+    scope: 'regular'
+  });
+
+  isConnected = true;
+  
+  // Уведомление
+  chrome.notifications.create({
+    type: 'basic',
+    iconUrl: 'icons/icon48.png',
+    title: '🔐 Ratybor VPN',
+    message: `Подключено: ${proxyConfig.name || proxyConfig.host}`,
+    priority: 2
+  });
+
+  console.log('✅ Proxy enabled');
+  return true;
+}
+
+// Отключение прокси
+async function disableProxy() {
+  await chrome.proxy.settings.clear({ scope: 'regular' });
+  isConnected = false;
+  
+  chrome.notifications.create({
+    type: 'basic',
+    iconUrl: 'icons/icon48.png',
+    title: '🔌 Ratybor VPN',
+    message: 'Отключено',
+    priority: 2
+  });
+
+  console.log('❌ Proxy disabled');
+  return true;
+}
+
+// Отправка статуса всем вкладкам
+function broadcastStatus() {
+  chrome.runtime.sendMessage({
+    action: 'STATUS_CHANGED',
+    payload: {
+      connected: isConnected,
+      config: proxyConfig
+    }
+  }).catch(() => {
+    // Игнорируем ошибки (если нет получателей)
+  });
+}
+
+// Восстановление состояния
+chrome.runtime.onStartup.addListener(async () => {
+  const { proxyConfig: savedConfig } = await chrome.storage.local.get('proxyConfig');
+  if (savedConfig) {
+    proxyConfig = savedConfig;
+    console.log('🔄 Config restored');
+  }
+});
+
+// При установке
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon48.png',
+      title: '🔐 Ratybor VPN',
+      message: 'Расширение установлено! Откройте Telegram бота для начала работы.'
+    });
+  }
+});
