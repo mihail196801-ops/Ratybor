@@ -3,329 +3,533 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#4361ee" />
   <title>🔐 VPN Connect</title>
   <style>
-    :root {
-      --bg: #0f0f13;
-      --card: #1a1a24;
-      --text: #e0e0ff;
-      --accent: #6c5ce7;
-      --accent-hover: #5a4fcf;
-      --success: #00b894;
-      --border: #2d2d44;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 20px;
-      line-height: 1.5;
+      color: #fff;
     }
+
     .container {
       width: 100%;
-      max-width: 480px;
-      text-align: center;
+      max-width: 400px;
+      margin-top: 40px;
     }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
     .logo {
       font-size: 3rem;
-      margin: 20px 0;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    /* Toggle Switch как в 1VPN */
+    .vpn-toggle {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 30px;
+      padding: 40px 30px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .toggle-wrapper {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+    }
+
+    .toggle-bg {
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      position: relative;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle-bg.active {
+      background: #00d084;
+      box-shadow: 0 0 40px rgba(0, 208, 132, 0.6);
       animation: pulse 2s infinite;
     }
+
     @keyframes pulse {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.05); }
     }
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 10px;
+
+    .toggle-circle {
+      width: 80px;
+      height: 80px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+
+    .toggle-bg.active .toggle-circle {
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    .status-text {
+      font-size: 1.3rem;
       font-weight: 600;
+      margin-top: 15px;
     }
-    .status {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-      margin: 20px 0;
-      font-size: 0.95rem;
+
+    .status-text.connected {
+      color: #00d084;
     }
-    .status.connected {
-      border-color: var(--success);
-      background: rgba(0, 184, 148, 0.1);
+
+    /* Server Selection */
+    .server-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
     }
-    .btn {
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 14px;
-      padding: 16px 24px;
+
+    .server-card:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .server-card.selected {
+      border-color: #00d084;
+      background: rgba(0, 208, 132, 0.2);
+    }
+
+    .server-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .server-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-size: 1.1rem;
       font-weight: 600;
+    }
+
+    .flag {
+      font-size: 1.5rem;
+    }
+
+    .ping {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .server-location {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-left: 40px;
+    }
+
+    /* Action Buttons */
+    .btn {
       width: 100%;
+      padding: 18px 24px;
+      border: none;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s ease;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      margin: 10px 0;
     }
-    .btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
-    .btn:active { transform: translateY(0); }
-    .btn.secondary {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
+
+    .btn-primary {
+      background: #fff;
+      color: #667eea;
     }
-    .btn.success {
-      background: var(--success);
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
-    .config-list {
-      margin-top: 25px;
-      text-align: left;
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
     }
-    .config-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin: 8px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.85rem;
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
-    .config-flag { font-size: 1.2rem; margin-right: 8px; }
-    .copy-btn {
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 0.8rem;
-      cursor: pointer;
+
+    .btn-success {
+      background: #00d084;
+      color: #fff;
     }
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--success);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-weight: 500;
-      transition: transform 0.3s;
-      z-index: 1000;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .footer {
-      margin-top: auto;
-      padding: 20px 0;
-      font-size: 0.8rem;
-      opacity: 0.7;
+
+    /* Info Card */
+    .info-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      line-height: 1.6;
       text-align: center;
     }
-    @media (max-width: 360px) {
-      .btn { padding: 14px 20px; font-size: 1rem; }
-      h1 { font-size: 1.3rem; }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #fff;
+      color: #667eea;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+      background: #ff4757;
+      color: #fff;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Connection Stats */
+    .stats {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .stats.show {
+      display: grid;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0 10px;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .toggle-wrapper {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .toggle-circle {
+        width: 65px;
+        height: 65px;
+        font-size: 2rem;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">🛡️</div>
-    <h1>VPN Connect</h1>
-    
-    <div class="status" id="status">
-      🔴 Статус: <strong>Отключено</strong><br>
-      <small>Нажмите кнопку ниже для подключения</small>
+    <div class="header">
+      <div class="logo">🛡️</div>
+      <h1>VPN Connect</h1>
     </div>
 
-    <button class="btn" id="connectBtn">
-      <span>⚡</span> Подключиться
-    </button>
-    
-    <button class="btn secondary" id="copyConfigBtn">
-      📋 Скопировать лучший конфиг
+    <!-- Toggle Switch -->
+    <div class="vpn-toggle">
+      <div class="toggle-wrapper" onclick="toggleVPN()">
+        <div class="toggle-bg" id="toggleBg">
+          <div class="toggle-circle" id="toggleCircle">
+            <span id="toggleIcon">🔌</span>
+          </div>
+        </div>
+      </div>
+      <div class="status-text" id="statusText">Отключено</div>
+    </div>
+
+    <!-- Server Selection -->
+    <div class="server-card selected" onclick="selectServer(0)">
+      <div class="server-header">
+        <div class="server-name">
+          <span class="flag">🇳🇱</span>
+          <span>Нидерланды</span>
+        </div>
+        <span class="ping">⚡ 45 ms</span>
+      </div>
+      <div class="server-location">Амстердам</div>
+    </div>
+
+    <!-- Stats (показываются при подключении) -->
+    <div class="stats" id="stats">
+      <div class="stat-item">
+        <div class="stat-value" id="downloadSpeed">0</div>
+        <div class="stat-label">Мбит/с ↓</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="uploadSpeed">0</div>
+        <div class="stat-label">Мбит/с ↑</div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <button class="btn btn-primary" onclick="downloadConfig()">
+      <span>📥</span>
+      <span>Скачать конфиг</span>
     </button>
 
-    <div class="config-list" id="configList">
-      <h3 style="margin: 20px 0 10px; font-size: 1.1rem;">🌍 Доступные серверы</h3>
-      <!-- Конфиги загружаются динамически -->
+    <button class="btn btn-secondary" onclick="showInstructions()">
+      <span>📖</span>
+      <span>Инструкция</span>
+    </button>
+
+    <!-- Info -->
+    <div class="info-card">
+      💡 <strong>Как использовать:</strong><br>
+      Нажмите большую кнопку для подключения. 
+      Скачайте конфиг и импортируйте в приложение (v2rayNG, Streisand, Hiddify).
     </div>
   </div>
 
-  <div class="toast" id="toast">✅ Скопировано!</div>
-  
-  <div class="footer">
-    Конфиги обновляются автоматически из GitHub.<br>
-    Последнее обновление: <span id="lastUpdate">—</span>
-  </div>
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
 
   <script>
-    // === Настройки ===
-    const CONFIGS_URL = 'configs/configs.json'; // Путь к файлу с конфигами
-    const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ваш-юзернейм/ваш-репозиторий/main';
-    
-    // === Состояние ===
     let isConnected = false;
-    let configs = [];
-    
-    // === DOM элементы ===
-    const connectBtn = document.getElementById('connectBtn');
-    const copyConfigBtn = document.getElementById('copyConfigBtn');
-    const statusEl = document.getElementById('status');
-    const configListEl = document.getElementById('configList');
-    const toastEl = document.getElementById('toast');
-    const lastUpdateEl = document.getElementById('lastUpdate');
-    
-    // === Инициализация ===
-    async function init() {
-      await loadConfigs();
-      renderConfigs();
-      updateLastUpdateTime();
-      
-      // Обработчики кнопок
-      connectBtn.addEventListener('click', toggleConnection);
-      copyConfigBtn.addEventListener('click', copyBestConfig);
-      
-      // Telegram WebApp инициализация (если открыто в боте)
-      if (window.Telegram?.WebApp) {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-        // Меняем цвет хедера под тему
-        document.body.style.background = Telegram.WebApp.backgroundColor || '#0f0f13';
+    let currentServer = 0;
+    let connectionInterval;
+
+    // Конфиги (замените на свои)
+    const configs = [
+      {
+        name: 'Нидерланды',
+        location: 'Амстердам',
+        flag: '🇳🇱',
+        config: 'vless://2563b829-866c-4c0f-8270-a91cffbfe852@alb03.tcpdoor.net:443?type=xhttp&security=tls&encryption=none&fp=random&sni=alb03.tcpdoor.net&path=c1a7c061-bf4d-4a96-b10f-64f484aa2a9a&host=alb03.tcpdoor.net&mode=auto&alpn=h2#Albania-Elbasan-BL'
       }
-    }
-    
-    // === Загрузка конфигов из GitHub ===
-    async function loadConfigs() {
-      try {
-        // В реальности: fetch(`${GITHUB_RAW_BASE}/web/configs/configs.json`)
-        // Для демо используем заглушку - замените на реальный запрос
-        const response = await fetch(CONFIGS_URL);
-        if (!response.ok) throw new Error('Не удалось загрузить конфиги');
-        configs = await response.json();
-      } catch (e) {
-        console.error('Ошибка загрузки:', e);
-        // Демо-данные, если файл не найден (удалите в продакшене)
-        configs = [
-          { country: '🇩🇪', name: 'Germany #1', config: 'vless://uuid@de1.example.com:443...', priority: 1 },
-          { country: '🇫🇮', name: 'Finland #2', config: 'vless://uuid@fi2.example.com:443...', priority: 2 },
-          { country: '🇯🇵', name: 'Japan #3', config: 'vless://uuid@jp3.example.com:443...', priority: 3 }
-        ];
-      }
-    }
-    
-    // === Отображение списка конфигов ===
-    function renderConfigs() {
-      configListEl.innerHTML = '<h3 style="margin: 20px 0 10px; font-size: 1.1rem;">🌍 Доступные серверы</h3>';
-      
-      // Сортируем по приоритету (меньше = лучше)
-      configs.sort((a, b) => a.priority - b.priority).slice(0, 5).forEach(cfg => {
-        const item = document.createElement('div');
-        item.className = 'config-item';
-        item.innerHTML = `
-          <span><span class="config-flag">${cfg.country}</span> ${cfg.name}</span>
-          <button class="copy-btn" data-config="${encodeURIComponent(cfg.config)}">Копировать</button>
-        `;
-        configListEl.appendChild(item);
-      });
-      
-      // Добавляем обработчики на кнопки копирования
-      document.querySelectorAll('.copy-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const config = decodeURIComponent(e.target.dataset.config);
-          copyToClipboard(config);
-        });
-      });
-    }
-    
-    // === Переключение подключения (визуальное) ===
-    function toggleConnection() {
-      isConnected = !isConnected;
-      
-      if (isConnected) {
-        statusEl.className = 'status connected';
-        statusEl.innerHTML = `🟢 Статус: <strong>Подключено</strong><br><small>Сервер: ${configs[0]?.name || 'Auto'}</small>`;
-        connectBtn.innerHTML = '<span>🔴</span> Отключиться';
-        connectBtn.classList.add('success');
-        showToast('✅ Подключение установлено!');
+      // Добавьте другие серверы
+    ];
+
+    // Toggle VPN
+    async function toggleVPN() {
+      const toggleBg = document.getElementById('toggleBg');
+      const toggleIcon = document.getElementById('toggleIcon');
+      const statusText = document.getElementById('statusText');
+      const stats = document.getElementById('stats');
+
+      if (!isConnected) {
+        // Подключение
+        toggleBg.classList.add('active');
+        toggleIcon.textContent = '⏳';
+        statusText.textContent = 'Подключение...';
+        statusText.classList.remove('connected');
+
+        // Имитация подключения (здесь должна быть реальная логика)
+        await simulateConnection();
+
+        isConnected = true;
+        toggleIcon.textContent = '🔐';
+        statusText.textContent = 'Подключено';
+        statusText.classList.add('connected');
+        stats.classList.add('show');
+        
+        showToast('✅ VPN подключен!', false);
+        startSpeedSimulation();
+        
+        // Вибрация
+        if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+        
       } else {
-        statusEl.className = 'status';
-        statusEl.innerHTML = `🔴 Статус: <strong>Отключено</strong><br><small>Нажмите кнопку для подключения</small>`;
-        connectBtn.innerHTML = '<span>⚡</span> Подключиться';
-        connectBtn.classList.remove('success');
+        // Отключение
+        toggleBg.classList.remove('active');
+        toggleIcon.textContent = '🔌';
+        statusText.textContent = 'Отключено';
+        statusText.classList.remove('connected');
+        stats.classList.remove('show');
+        isConnected = false;
+        
+        showToast('❌ VPN отключен', false);
+        stopSpeedSimulation();
+        
+        if (navigator.vibrate) navigator.vibrate(100);
       }
+    }
+
+    // Имитация подключения
+    function simulateConnection() {
+      return new Promise(resolve => setTimeout(resolve, 1500));
+    }
+
+    // Симуляция скорости
+    function startSpeedSimulation() {
+      connectionInterval = setInterval(() => {
+        document.getElementById('downloadSpeed').textContent = (Math.random() * 50 + 10).toFixed(1);
+        document.getElementById('uploadSpeed').textContent = (Math.random() * 20 + 5).toFixed(1);
+      }, 2000);
+    }
+
+    function stopSpeedSimulation() {
+      clearInterval(connectionInterval);
+      document.getElementById('downloadSpeed').textContent = '0';
+      document.getElementById('uploadSpeed').textContent = '0';
+    }
+
+    // Выбор сервера
+    function selectServer(index) {
+      currentServer = index;
+      document.querySelectorAll('.server-card').forEach((card, i) => {
+        card.classList.toggle('selected', i === index);
+      });
+      showToast(`🌍 Сервер: ${configs[index].name}`, false);
+    }
+
+    // Скачивание конфига
+    function downloadConfig() {
+      const config = configs[currentServer].config;
+      const blob = new Blob([config], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vpn-config-${configs[currentServer].name}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📥 Конфиг скачан!', false);
+    }
+
+    // Инструкция
+    function showInstructions() {
+      const instructions = `
+📱 Инструкция по подключению:
+
+1. Скачайте приложение:
+   • Android: v2rayNG, Hiddify
+   • iOS: Streisand, FoXray, V2Box
+   • PC: v2rayN, Hiddify Desktop
+
+2. Откройте приложение
+
+3. Импортируйте конфиг:
+   • Нажмите "+" или "Import"
+   • Выберите скачанный файл
+   • Или вставьте ссылку вручную
+
+4. Нажмите "Подключиться"
+
+🔗 Ссылки на приложения:
+• v2rayNG: GitHub
+• Hiddify: hiddify.com
+• Streisand: App Store
+      `;
       
-      // Вибрация для тактильного отклика (на мобильных)
-      if (navigator.vibrate) navigator.vibrate(50);
+      alert(instructions);
     }
-    
-    // === Копирование лучшего конфига ===
-    function copyBestConfig() {
-      if (configs.length === 0) {
-        showToast('❌ Нет доступных конфигов', true);
-        return;
-      }
-      // Берем конфиг с наивысшим приоритетом (наименьшее число)
-      const best = configs.sort((a, b) => a.priority - b.priority)[0];
-      copyToClipboard(best.config);
-      showToast(`✅ Скопирован: ${best.country} ${best.name}`);
-    }
-    
-    // === Универсальная функция копирования ===
-    function copyToClipboard(text) {
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
-      } else {
-        fallbackCopy(text);
-      }
-    }
-    
-    function fallbackCopy(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.focus();
-      textarea.select();
-      try {
-        document.execCommand('copy');
-      } catch (e) {
-        showToast('❌ Не удалось скопировать', true);
-      }
-      document.body.removeChild(textarea);
-    }
-    
-    // === Показ уведомления ===
+
+    // Toast notification
     function showToast(message, isError = false) {
-      toastEl.textContent = message;
-      toastEl.style.background = isError ? '#e74c3c' : '#00b894';
-      toastEl.classList.add('show');
-      setTimeout(() => toastEl.classList.remove('show'), 2500);
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3000);
     }
-    
-    // === Обновление времени последнего обновления ===
-    function updateLastUpdateTime() {
-      const now = new Date();
-      const options = { 
-        day: '2-digit', month: '2-digit', 
-        hour: '2-digit', minute: '2-digit',
-        timeZone: 'Europe/Moscow'
-      };
-      lastUpdateEl.textContent = now.toLocaleString('ru-RU', options) + ' MSK';
+
+    // PWA Service Worker (для установки как приложения)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('data:text/javascript,').catch(() => {
+        // Service worker не поддерживается
+      });
     }
-    
-    // === Запуск ===
-    document.addEventListener('DOMContentLoaded', init);
+
+    // Проверка поддержки VPN API (если есть)
+    if ('vpn' in navigator) {
+      console.log('VPN API поддерживается');
+    } else {
+      console.log('VPN API не поддерживается - используем конфиги');
+    }
   </script>
 </body>
 </html>
