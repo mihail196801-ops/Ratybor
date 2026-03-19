@@ -1,66 +1,66 @@
-import asyncio
-import logging
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
+import asyncio
+import random
+import string
 
-BOT_TOKEN = "8704703103:AAGjORYqxVH5si9OodvDE7xOAXt1do9Zy0"  # ← Замените после отзыва старого!
-WEBAPP_URL = "https://mihail196801-ops.github.io/Ratybor/"  # ← Ваш Web App URL
+# ⚠️ ВСТАВЬТЕ ВАШ ТОКЕН
+BOT_TOKEN = "8704703103:AAGjORYqxVH5si9OodvDE7xOAXt1do9Zy0Q"
+WEBAPP_URL = "https://mihail196801-ops.github.io/Ratybor/webapp/"
 
-logging.basicConfig(level=logging.INFO)
+# Хранилище ключей (в памяти)
+access_keys = {}
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+def generate_key(length=8):
+    """Генерация случайного ключа"""
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
 @dp.message(CommandStart())
-async def cmd_start(message: types.Message):
-    user = message.from_user.first_name
+async def start_command(message: types.Message):
+    user_id = message.from_user.id
+    user_name = message.from_user.first_name
+    
+    # Генерируем уникальный ключ для пользователя
+    if user_id not in access_keys:
+        access_keys[user_id] = generate_key()
+    
+    key = access_keys[user_id]
     
     # Кнопка с Web App
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text="🔐 Запустить VPN",
-            web_app=WebAppInfo(url=WEBAPP_URL)
-        )],
-        [InlineKeyboardButton(
-            text="⭐ Поддержать автора",
-            callback_data="support"
-        )]
-    ])
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=[
+            [types.KeyboardButton(text="🔐 Получить доступ к VPN", web_app=WebAppInfo(url=WEBAPP_URL))]
+        ],
+        resize_keyboard=True
+    )
     
     await message.answer(
-        f"👋 Привет, {user}!\n\n"
-        f"🛡️ <b>VPN Connect</b> — ваш приватный доступ к интернету.\n\n"
-        f"📋 <b>Как использовать:</b>\n"
-        f"1. Нажмите «Запустить VPN»\n"
-        f"2. Установите расширение (если нужно)\n"
-        f"3. Выберите сервер и подключитесь!\n\n"
-        f"🔐 Все конфиги хранятся на вашем GitHub",
+        f"👋 Привет, {user_name}!\n\n"
+        f"🛡️ <b>Ratybor VPN</b> — система защиты твоего ПК.\n\n"
+        f"📋 <b>Твой персональный ключ доступа:</b>\n"
+        f"<code>{key}</code>\n\n"
+        f"⚠️ Сохрани этот ключ! Он понадобится для активации расширения.\n\n"
+        f"Нажми кнопку ниже, чтобы скачать расширение и активировать VPN:",
         reply_markup=keyboard,
         parse_mode="HTML"
     )
 
-@dp.callback_query(F.data == "support")
-async def on_support(callback: types.CallbackQuery):
-    """Кнопка поддержки через Telegram Stars"""
-    await callback.answer("⭐ Функция оплаты скоро будет доступна!", show_alert=True)
-    
-    # Для реальной оплаты раскомментируйте:
-    # await bot.send_invoice(
-    #     chat_id=callback.message.chat.id,
-    #     title="Поддержка VPN Connect",
-    #     description="Спасибо за помощь в развитии проекта!",
-    #     payload="support_100stars",
-    #     provider_token="",  # Для XTR оставляем пустым
-    #     currency="XTR",
-    #     prices=[types.LabeledPrice(label="Donation", amount=100)],
-    # )
+@dp.message()
+async def echo(message: types.Message):
+    if message.text == "🔐 Получить доступ к VPN":
+        await message.answer("🔗 Открой Web App для скачивания расширения!")
+    else:
+        await message.answer("Нажми /start для получения ключа доступа")
 
 async def main():
-    print(f"✅ Бот запущен! Web App: {WEBAPP_URL}")
+    print("✅ Бот запущен! Web App:", WEBAPP_URL)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("🛑 Бот остановлен")
+    asyncio.run(main())
+
+
