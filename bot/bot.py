@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-BOT_TOKEN = "8704703103:AAHIfm5ZCQ6wMVULa3ziZzoIIIuxeFxnwCw"  # ← Замените после отзыва старого!
+BOT_TOKEN = "8704703103:AAGjORYqxVH5si9OodvDE7xOAXt1do9Zy0"  # ← Замените после отзыва старого!
 WEBAPP_URL = "https://mihail196801-ops.github.io/Ratybor/"  # ← Ваш Web App URL
 
 logging.basicConfig(level=logging.INFO)
