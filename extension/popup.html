@@ -5,344 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ratybor VPN</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            width: 380px;
-            min-height: 500px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            width: 350px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff;
             padding: 20px;
         }
-
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-            font-size: 2.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .status {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* Key Input Modal */
-        .key-modal {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 20px;
-            border: 2px solid rgba(255,255,255,0.2);
-            display: none;
-        }
-
-        .key-modal.show {
-            display: block;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .key-title {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-        }
-
-        .key-input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 12px;
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            font-size: 1.2rem;
-            text-align: center;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            outline: none;
-            margin-bottom: 15px;
-            transition: border-color 0.3s;
-        }
-
-        .key-input:focus {
-            border-color: #00d084;
-        }
-
-        .key-input::placeholder {
-            color: rgba(255,255,255,0.5);
-            letter-spacing: normal;
-            text-transform: none;
-        }
-
-        .btn-activate {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #00d084 0%, #00a86b 100%);
-            color: #fff;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .btn-activate:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-activate:active {
-            transform: translateY(0);
-        }
-
-        /* Big Connect Button */
-        .connect-container {
-            text-align: center;
-            margin: 30px 0;
-        }
-
-        .connect-btn {
-            width: 180px;
-            height: 180px;
+        .logo { font-size: 3rem; margin-bottom: 10px; }
+        h1 { font-size: 1.5rem; margin-bottom: 5px; }
+        .status { font-size: 0.9rem; opacity: 0.9; }
+        
+        .big-button {
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             border: none;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
             color: #fff;
             font-size: 4rem;
             cursor: pointer;
-            transition: all 0.3s;
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto;
-            position: relative;
+            transition: all 0.3s;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
-
-        .connect-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .connect-btn:active {
-            transform: scale(0.95);
-        }
-
-        .connect-btn.active {
+        .big-button:hover { transform: scale(1.05); }
+        .big-button:active { transform: scale(0.95); }
+        .big-button.active {
             background: linear-gradient(135deg, #00d084 0%, #00a86b 100%);
             animation: pulse 2s infinite;
-            box-shadow: 0 0 60px rgba(0, 208, 132, 0.6);
         }
-
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 60px rgba(0, 208, 132, 0.6); }
-            50% { box-shadow: 0 0 80px rgba(0, 208, 132, 0.8); }
+            0%, 100% { box-shadow: 0 0 40px rgba(0,208,132,0.6); }
+            50% { box-shadow: 0 0 60px rgba(0,208,132,0.8); }
         }
-
-        .connect-btn.connecting {
-            animation: connecting 1.5s infinite;
-        }
-
-        @keyframes connecting {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .connect-status {
-            margin-top: 20px;
+        .button-text {
+            text-align: center;
             font-size: 1.1rem;
             font-weight: 600;
         }
-
-        .connect-info {
-            font-size: 0.85rem;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
-
-        /* Server Selection */
-        .servers-section {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .servers-title {
-            font-size: 0.95rem;
-            margin-bottom: 15px;
-            opacity: 0.9;
-        }
-
-        .server-item {
+        .info {
             background: rgba(255,255,255,0.1);
             border-radius: 12px;
-            padding: 12px 16px;
-            margin: 8px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-
-        .server-item:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateX(5px);
-        }
-
-        .server-item.selected {
-            border-color: #00d084;
-            background: rgba(0, 208, 132, 0.2);
-        }
-
-        .server-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .server-flag {
-            font-size: 1.5rem;
-        }
-
-        .server-name {
-            font-weight: 500;
-        }
-
-        .server-ping {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-
-        .server-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #00d084;
-            display: none;
-        }
-
-        .server-item.selected .server-indicator {
-            display: block;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
+            padding: 15px;
             margin-top: 20px;
-            font-size: 0.75rem;
-            opacity: 0.6;
-        }
-
-        /* Stats */
-        .stats {
-            display: none;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .stats.show {
-            display: grid;
-        }
-
-        .stat-box {
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            opacity: 0.8;
-        }
-
-        /* Error/Success Messages */
-        .message {
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
             text-align: center;
             font-size: 0.9rem;
-            display: none;
         }
-
-        .message.show {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .message.error {
-            background: rgba(255, 107, 107, 0.3);
-            border: 1px solid #ff6b6b;
-        }
-
-        .message.success {
-            background: rgba(0, 208, 132, 0.3);
-            border: 1px solid #00d084;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Loading Spinner */
-        .spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto;
-        }
-
-        .spinner.show {
-            display: block;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .youtube-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #ff0000;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -350,57 +78,19 @@
     <div class="header">
         <div class="logo">🛡️</div>
         <h1>Ratybor VPN</h1>
-        <div class="status" id="statusText">Отключено</div>
+        <div class="status" id="status">Отключено</div>
     </div>
-
-    <!-- Key Activation Modal -->
-    <div class="key-modal" id="keyModal">
-        <div class="key-title">🔑 Введите ключ доступа</div>
-        <input 
-            type="text" 
-            class="key-input" 
-            id="accessKey" 
-            placeholder="XXXXXXXX"
-            maxlength="8"
-            autocomplete="off"
-        >
-        <button class="btn-activate" id="activateBtn">
-            Активировать
-        </button>
-        <div class="message" id="keyMessage"></div>
+    
+    <button class="big-button" id="vpnButton">
+        <span>🔌</span>
+    </button>
+    <div class="button-text" id="buttonText">Нажмите для подключения</div>
+    
+    <div class="info">
+        <div>✅ YouTube разблокирован</div>
+        <div class="youtube-badge">▶️ YouTube</div>
     </div>
-
-    <!-- Big Connect Button -->
-    <div class="connect-container" id="connectContainer" style="display: none;">
-        <button class="connect-btn" id="connectBtn">
-            🔌
-        </button>
-        <div class="connect-status" id="connectStatus">Нажмите для подключения</div>
-        <div class="connect-info" id="connectInfo">Нет активного конфига</div>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats" id="stats">
-        <div class="stat-box">
-            <div class="stat-value" id="downloadSpeed">0</div>
-            <div class="stat-label">Мбит/с ↓</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="uploadSpeed">0</div>
-            <div class="stat-label">Мбит/с ↑</div>
-        </div>
-    </div>
-
-    <!-- Server Selection -->
-    <div class="servers-section" id="serversSection" style="display: none;">
-        <div class="servers-title">🌍 Выберите сервер</div>
-        <div id="serversList"></div>
-    </div>
-
-    <div class="footer">
-        v1.0.0 • Ratybor VPN
-    </div>
-
+    
     <script src="popup.js"></script>
 </body>
 </html>
